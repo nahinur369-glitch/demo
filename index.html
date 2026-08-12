@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>BFS & DFS Maze Analysis</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Courier New", monospace;
+        background: #0d1117;
+        color: #e6edf3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1100px;
+        padding: 25px;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .header h1 {
+        margin: 0;
+        color: #58a6ff;
+        font-size: 30px;
+    }
+
+    .header p {
+        color: #8b949e;
+        margin-top: 8px;
+    }
+
+    .panel {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    }
+
+    .menu {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    button {
+        border: none;
+        border-radius: 7px;
+        padding: 13px 16px;
+        font-family: inherit;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+        background: #238636;
+        transition: .2s;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.15);
+    }
+
+    button:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .dfs-btn {
+        background: #8957e5;
+    }
+
+    .bfs-btn {
+        background: #1f6feb;
+    }
+
+    .compare-btn {
+        background: #d29922;
+        color: #111;
+    }
+
+    .edge-btn {
+        background: #da3633;
+    }
+
+    .exit-btn {
+        background: #484f58;
+    }
+
+    .status {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 14px;
+        margin-bottom: 18px;
+        min-height: 50px;
+    }
+
+    .status-title {
+        color: #58a6ff;
+        font-weight: bold;
+    }
+
+    .maze-wrapper {
+        overflow-x: auto;
+        padding: 15px 0;
+    }
+
+    .maze {
+        display: grid;
+        grid-template-columns: repeat(20, 30px);
+        grid-template-rows: repeat(10, 30px);
+        gap: 2px;
+        width: max-content;
+        margin: auto;
+    }
+
+    .cell {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 3px;
+        font-weight: bold;
+        font-size: 15px;
+        transition: background .08s, color .08s;
+    }
+
+    .empty {
+        background: #21262d;
+        color: transparent;
+    }
+
+    .wall {
+        background: #f0f0f0;
+        color: #111;
+    }
+
+    .start {
+        background: #238636;
+        color: white;
+        box-shadow: 0 0 10px #238636;
+    }
+
+    .end {
+        background: #da3633;
+        color: white;
+        box-shadow: 0 0 10px #da3633;
+    }
+
+    .visited {
+        background: #00bcd4;
+        color: white;
+        animation: visit .15s ease;
+    }
+
+    .path {
+        background: #f1c40f;
+        color: #111;
+        box-shadow: 0 0 8px #f1c40f;
+    }
+
+    @keyframes visit {
+        from {
+            transform: scale(.6);
+            opacity: .3;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .legend {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin: 15px 0;
+        color: #8b949e;
+        font-size: 14px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .legend-box {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .stat {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 14px;
+        text-align: center;
+    }
+
+    .stat-label {
+        color: #8b949e;
+        font-size: 13px;
+    }
+
+    .stat-value {
+        color: #58a6ff;
+        font-size: 21px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    .results {
+        margin-top: 20px;
+    }
+
+    .results h2 {
+        color: #58a6ff;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #0d1117;
+    }
+
+    th,
+    td {
+        padding: 12px;
+        border: 1px solid #30363d;
+        text-align: center;
+    }
+
+    th {
+        color: #58a6ff;
+        background: #161b22;
+    }
+
+    td {
+        color: #e6edf3;
+    }
+
+    .success {
+        color: #3fb950;
+        font-weight: bold;
+    }
+
+    .danger {
+        color: #f85149;
+        font-weight: bold;
+    }
+
+    .info {
+        margin-top: 18px;
+        padding: 15px;
+        background: #161b22;
+        border-left: 4px solid #58a6ff;
+        line-height: 1.6;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #6e7681;
+        font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            width: 100%;
+            padding: 12px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+        }
+
+        .maze {
+            grid-template-columns: repeat(20, 24px);
+            grid-template-rows: repeat(10, 24px);
+        }
+
+        .cell {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>BFS & DFS MAZE ANALYSIS</h1>
+        <p>Interactive Maze Search & Algorithm Comparison</p>
+    </div>
+
+    <div class="panel">
+
+        <div class="menu">
+            <button class="dfs-btn" onclick="runDFSAnimated()">
+                1. Run DFS Visualization
+            </button>
+
+            <button class="bfs-btn" onclick="runBFSAnimated()">
+                2. Run BFS Visualization
+            </button>
+
+            <button class="compare-btn" onclick="runComparison()">
+                3. Compare BFS vs DFS
+            </button>
+
+            <button class="edge-btn" onclick="runUnreachableTest()">
+                4. Test Unreachable Target
+            </button>
+
+            <button class="exit-btn" onclick="exitProgram()">
+                5. Exit
+            </button>
+        </div>
+
+        <div class="status">
+            <span class="status-title">Status:</span>
+            <span id="status">Ready. Select an option above.</span>
+        </div>
+
+        <div class="maze-wrapper">
+            <div id="maze" class="maze"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-box start"></span>
+                S = Start
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-box end"></span>
+                E = End
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-box visited"></span>
+                . = Visited
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-box path"></span>
+                * = Final Path
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-box wall"></span>
+                # = Wall
+            </div>
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-label">Algorithm</div>
+                <div class="stat-value" id="algorithm">-</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Path Found</div>
+                <div class="stat-value" id="found">-</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Explored Nodes</div>
+                <div class="stat-value" id="nodes">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Path Length</div>
+                <div class="stat-value" id="pathLength">-</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Execution Time</div>
+                <div class="stat-value" id="cpuTime">-</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Peak Structure</div>
+                <div class="stat-value" id="peak">0</div>
+            </div>
+
+        </div>
+
+        <div id="results" class="results"></div>
+
+        <div class="footer">
+            BFS & DFS Maze Analysis Project
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+const ROWS = 10;
+const COLS = 20;
+const ANIMATION_DELAY_MS = 45;
+
+/*
+    Same maze as the C program.
+
+    # = Wall
+    S = Start
+    E = End
+    space = Open path
+*/
+const defaultMaze = [
+    "S #       #        #",
+    "  #  ###  #  ####  #",
+    "     #    #  #     #",
+    "###  #  ###  #  ####",
+    "  #  #       #     #",
+    "  #  #####   ####  #",
+    "  #          #     #",
+    "  #######    #  ####",
+    "        #    #     E",
+    "#####   #    #######"
+];
+
+let maze = [];
+let visited = [];
+let parentCell = [];
+let running = false;
+
+
+/* ---------------------------------------------------
+   Utility Functions
+--------------------------------------------------- */
+
+function resetMaze() {
+
+    maze = defaultMaze.map(row => row.split(""));
+
+    visited = Array.from(
+        { length: ROWS },
+        () => Array(COLS).fill(false)
+    );
+
+    parentCell = Array.from(
+        { length: ROWS },
+        () => Array.from(
+            { length: COLS },
+            () => null
+        )
+    );
+
+    drawMaze();
+
+    updateStats({
+        algorithm: "-",
+        found: "-",
+        nodes: 0,
+        pathLength: "-",
+        cpuTime: "-",
+        peak: 0
+    });
+}
+
+
+function findCell(target) {
+
+    for (let r = 0; r < ROWS; r++) {
+
+        for (let c = 0; c < COLS; c++) {
+
+            if (maze[r][c] === target) {
+                return { r, c };
+            }
+        }
+    }
+
+    return null;
+}
+
+
+function isInside(r, c) {
+
+    return (
+        r >= 0 &&
+        r < ROWS &&
+        c >= 0 &&
+        c < COLS
+    );
+}
+
+
+function isValid(r, c) {
+
+    return (
+        isInside(r, c) &&
+        maze[r][c] !== "#" &&
+        !visited[r][c]
+    );
+}
+
+
+function samePoint(a, b) {
+
+    return (
+        a &&
+        b &&
+        a.r === b.r &&
+        a.c === b.c
+    );
+}
+
+
+/* ---------------------------------------------------
+   Maze Rendering
+--------------------------------------------------- */
+
+function drawMaze() {
+
+    const mazeElement = document.getElementById("maze");
+
+    mazeElement.innerHTML = "";
+
+    for (let r = 0; r < ROWS; r++) {
+
+        for (let c = 0; c < COLS; c++) {
+
+            const cell = document.createElement("div");
+
+            cell.className = "cell";
+
+            const value = maze[r][c];
+
+            if (value === "#") {
+
+                cell.classList.add("wall");
+                cell.textContent = "";
+
+            } else if (value === "S") {
+
+                cell.classList.add("start");
+                cell.textContent = "S";
+
+            } else if (value === "E") {
+
+                cell.classList.add("end");
+                cell.textContent = "E";
+
+            } else if (value === ".") {
+
+                cell.classList.add("visited");
+                cell.textContent = ".";
+
+            } else if (value === "*") {
+
+                cell.classList.add("path");
+                cell.textContent = "*";
+
+            } else {
+
+                cell.classList.add("empty");
+                cell.textContent = "";
+            }
+
+            mazeElement.appendChild(cell);
+        }
+    }
+}
+
+
+/* ---------------------------------------------------
+   Statistics
+--------------------------------------------------- */
+
+function updateStats(data) {
+
+    document.getElementById("algorithm").textContent =
+        data.algorithm;
+
+    document.getElementById("found").textContent =
+        data.found;
+
+    document.getElementById("nodes").textContent =
+        data.nodes;
+
+    document.getElementById("pathLength").textContent =
+        data.pathLength;
+
+    document.getElementById("cpuTime").textContent =
+        data.cpuTime;
+
+    document.getElementById("peak").textContent =
+        data.peak;
+}
+
+
+function setStatus(text) {
+
+    document.getElementById("status").textContent = text;
+}
+
+
+function delay(ms) {
+
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+/* ---------------------------------------------------
+   Path Reconstruction
+--------------------------------------------------- */
+
+function reconstructPath(start, end) {
+
+    if (samePoint(start, end)) {
+        return 0;
+    }
+
+    let length = 0;
+    let current = end;
+
+    while (!samePoint(current, start)) {
+
+        const parent =
+            parentCell[current.r][current.c];
+
+        if (!parent) {
+            return -1;
+        }
+
+        length++;
+
+        current = parent;
+
+        if (
+            !samePoint(current, start) &&
+            maze[current.r][current.c] !== "E"
+        ) {
+            maze[current.r][current.c] = "*";
+        }
+    }
+
+    return length;
+}
+
+
+/* ---------------------------------------------------
+   DFS
+--------------------------------------------------- */
+
+async function dfsVisit(
+    r,
+    c,
+    end,
+    metrics,
+    depth,
+    animate
+) {
+
+    visited[r][c] = true;
+
+    metrics.nodesVisited++;
+
+    if (depth > metrics.peakStructure) {
+        metrics.peakStructure = depth;
+    }
+
+    if (r === end.r && c === end.c) {
+        return true;
+    }
+
+    if (
+        maze[r][c] !== "S" &&
+        maze[r][c] !== "E"
+    ) {
+        maze[r][c] = ".";
+    }
+
+    if (animate) {
+
+        drawMaze();
+
+        updateStats({
+            algorithm: "DFS",
+            found: "Searching...",
+            nodes: metrics.nodesVisited,
+            pathLength: "-",
+            cpuTime: "-",
+            peak: metrics.peakStructure
+        });
+
+        await delay(ANIMATION_DELAY_MS);
+    }
+
+    const dRow = [-1, 1, 0, 0];
+    const dCol = [0, 0, -1, 1];
+
+    for (let i = 0; i < 4; i++) {
+
+        const nr = r + dRow[i];
+        const nc = c + dCol[i];
+
+        if (isValid(nr, nc)) {
+
+            parentCell[nr][nc] = {
+                r: r,
+                c: c
+            };
+
+            if (
+                await dfsVisit(
+                    nr,
+                    nc,
+                    end,
+                    metrics,
+                    depth + 1,
+                    animate
+                )
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+async function runDFS(animate = true) {
+
+    resetMaze();
+
+    const start = findCell("S");
+    const end = findCell("E");
+
+    const metrics = {
+        found: false,
+        nodesVisited: 0,
+        pathLength: -1,
+        peakStructure: 0,
+        cpuTimeMs: 0
+    };
+
+    if (!start || !end) {
+        return metrics;
+    }
+
+    setStatus("DFS is searching through the maze...");
+
+    const begin = performance.now();
+
+    metrics.found = await dfsVisit(
+        start.r,
+        start.c,
+        end,
+        metrics,
+        1,
+        animate
+    );
+
+    const finish = performance.now();
+
+    metrics.cpuTimeMs =
+        finish - begin;
+
+    if (metrics.found) {
+
+        metrics.pathLength =
+            reconstructPath(start, end);
+
+        drawMaze();
+    }
+
+    updateStats({
+        algorithm: "DFS",
+        found: metrics.found ? "YES" : "NO",
+        nodes: metrics.nodesVisited,
+        pathLength:
+            metrics.found ?
+            metrics.pathLength :
+            -1,
+        cpuTime:
+            metrics.cpuTimeMs.toFixed(3) + " ms",
+        peak: metrics.peakStructure
+    });
+
+    setStatus(
+        metrics.found
+        ? "DFS completed successfully."
+        : "DFS could not find a path."
+    );
+
+    return metrics;
+}
+
+
+async function runDFSAnimated() {
+
+    if (running) return;
+
+    running = true;
+
+    disableButtons(true);
+
+    await runDFS(true);
+
+    disableButtons(false);
+
+    running = false;
+}
+
+
+/* ---------------------------------------------------
+   BFS
+--------------------------------------------------- */
+
+async function runBFS(animate = true) {
+
+    resetMaze();
+
+    const start = findCell("S");
+    const end = findCell("E");
+
+    const metrics = {
+        found: false,
+        nodesVisited: 0,
+        pathLength: -1,
+        peakStructure: 1,
+        cpuTimeMs: 0
+    };
+
+    if (!start || !end) {
+        return metrics;
+    }
+
+    const queue = [];
+
+    let front = 0;
+    let rear = 0;
+
+    queue[rear++] = start;
+
+    visited[start.r][start.c] = true;
+
+    setStatus("BFS is searching through the maze...");
+
+    const begin = performance.now();
+
+    const dRow = [-1, 1, 0, 0];
+    const dCol = [0, 0, -1, 1];
+
+    while (front < rear) {
+
+        const current = queue[front++];
+
+        metrics.nodesVisited++;
+
+        if (samePoint(current, end)) {
+
+            metrics.found = true;
+
+            break;
+        }
+
+        if (
+            maze[current.r][current.c] !== "S" &&
+            maze[current.r][current.c] !== "E"
+        ) {
+
+            maze[current.r][current.c] = ".";
+        }
+
+        if (animate) {
+
+            drawMaze();
+
+            updateStats({
+                algorithm: "BFS",
+                found: "Searching...",
+                nodes: metrics.nodesVisited,
+                pathLength: "-",
+                cpuTime: "-",
+                peak: metrics.peakStructure
+            });
+
+            await delay(ANIMATION_DELAY_MS);
+        }
+
+        for (let i = 0; i < 4; i++) {
+
+            const nr =
+                current.r + dRow[i];
+
+            const nc =
+                current.c + dCol[i];
+
+            if (isValid(nr, nc)) {
+
+                visited[nr][nc] = true;
+
+                parentCell[nr][nc] = current;
+
+                queue[rear++] = {
+                    r: nr,
+                    c: nc
+                };
+
+                const queueSize =
+                    rear - front;
+
+                if (
+                    queueSize >
+                    metrics.peakStructure
+                ) {
+                    metrics.peakStructure =
+                        queueSize;
+                }
+            }
+        }
+    }
+
+    const finish = performance.now();
+
+    metrics.cpuTimeMs =
+        finish - begin;
+
+    if (metrics.found) {
+
+        metrics.pathLength =
+            reconstructPath(start, end);
+    }
+
+    drawMaze();
+
+    updateStats({
+        algorithm: "BFS",
+        found: metrics.found ? "YES" : "NO",
+        nodes: metrics.nodesVisited,
+        pathLength:
+            metrics.found ?
+            metrics.pathLength :
+            -1,
+        cpuTime:
+            metrics.cpuTimeMs.toFixed(3) + " ms",
+        peak: metrics.peakStructure
+    });
+
+    setStatus(
+        metrics.found
+        ? "BFS completed successfully."
+        : "BFS could not find a path."
+    );
+
+    return metrics;
+}
+
+
+async function runBFSAnimated() {
+
+    if (running) return;
+
+    running = true;
+
+    disableButtons(true);
+
+    await runBFS(true);
+
+    disableButtons(false);
+
+    running = false;
+}
+
+
+/* ---------------------------------------------------
+   Comparison
+--------------------------------------------------- */
+
+async function runComparison() {
+
+    if (running) return;
+
+    running = true;
+
+    disableButtons(true);
+
+    setStatus("Running DFS benchmark...");
+
+    const dfs = await runDFS(false);
+
+    await delay(300);
+
+    setStatus("Running BFS benchmark...");
+
+    const bfs = await runBFS(false);
+
+    showComparison(dfs, bfs);
+
+    setStatus(
+        "BFS vs DFS comparison completed."
+    );
+
+    disableButtons(false);
+
+    running = false;
+}
+
+
+function showComparison(dfs, bfs) {
+
+    const results =
+        document.getElementById("results");
+
+    results.innerHTML = `
+
+        <h2>BFS vs DFS Comparison</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>DFS</th>
+                    <th>BFS</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>Path Found</td>
+                    <td class="${dfs.found ? "success" : "danger"}">
+                        ${dfs.found ? "YES" : "NO"}
+                    </td>
+
+                    <td class="${bfs.found ? "success" : "danger"}">
+                        ${bfs.found ? "YES" : "NO"}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Explored Nodes</td>
+                    <td>${dfs.nodesVisited}</td>
+                    <td>${bfs.nodesVisited}</td>
+                </tr>
+
+                <tr>
+                    <td>Path Length</td>
+                    <td>${dfs.found ? dfs.pathLength : -1}</td>
+                    <td>${bfs.found ? bfs.pathLength : -1}</td>
+                </tr>
+
+                <tr>
+                    <td>CPU / Execution Time</td>
+                    <td>${dfs.cpuTimeMs.toFixed(3)} ms</td>
+                    <td>${bfs.cpuTimeMs.toFixed(3)} ms</td>
+                </tr>
+
+                <tr>
+                    <td>Peak Structure</td>
+                    <td>${dfs.peakStructure}</td>
+                    <td>${bfs.peakStructure}</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+        <div class="info">
+
+            <strong>Analysis</strong>
+
+            <br><br>
+
+            • BFS guarantees a shortest path in this
+            unweighted maze.
+
+            <br>
+
+            • DFS can find a valid path, but it does
+            not guarantee the shortest path.
+
+            <br>
+
+            • Explored-node count depends on neighbor
+            order and maze structure.
+
+            <br>
+
+            • Peak structure means recursion depth
+            for DFS and queue size for BFS.
+
+        </div>
+    `;
+}
+
+
+/* ---------------------------------------------------
+   Unreachable Target Test
+--------------------------------------------------- */
+
+function blockAllEntrancesToEnd() {
+
+    const end = findCell("E");
+
+    if (!end) return;
+
+    const dRow = [-1, 1, 0, 0];
+    const dCol = [0, 0, -1, 1];
+
+    for (let i = 0; i < 4; i++) {
+
+        const nr =
+            end.r + dRow[i];
+
+        const nc =
+            end.c + dCol[i];
+
+        if (
+            isInside(nr, nc) &&
+            maze[nr][nc] !== "#" &&
+            maze[nr][nc] !== "S"
+        ) {
+
+            maze[nr][nc] = "#";
+        }
+    }
+}
+
+
+async function runUnreachableTest() {
+
+    if (running) return;
+
+    running = true;
+
+    disableButtons(true);
+
+    resetMaze();
+
+    blockAllEntrancesToEnd();
+
+    drawMaze();
+
+    await delay(500);
+
+    /*
+       Run BFS directly without resetting the maze.
+    */
+    const metrics = await runBFSOnCurrentMaze();
+
+    const results =
+        document.getElementById("results");
+
+    if (!metrics.found) {
+
+        results.innerHTML = `
+
+            <div class="info">
+
+                <strong class="success">
+                    EDGE CASE PASSED
+                </strong>
+
+                <br><br>
+
+                Target is unreachable;
+                no path exists.
+
+            </div>
+        `;
+
+        setStatus(
+            "Edge case passed: target is unreachable."
+        );
+
+    } else {
+
+        results.innerHTML = `
+
+            <div class="info">
+
+                <strong class="danger">
+                    Unexpected Result
+                </strong>
+
+                <br><br>
+
+                A path was found even though
+                the target entrances were blocked.
+
+            </div>
+        `;
+    }
+
+    disableButtons(false);
+
+    running = false;
+}
+
+
+async function runBFSOnCurrentMaze() {
+
+    const start = findCell("S");
+    const end = findCell("E");
+
+    const metrics = {
+        found: false,
+        nodesVisited: 0,
+        pathLength: -1,
+        peakStructure: 1,
+        cpuTimeMs: 0
+    };
+
+    if (!start || !end) {
+        return metrics;
+    }
+
+    const queue = [];
+
+    let front = 0;
+    let rear = 0;
+
+    queue[rear++] = start;
+
+    visited[start.r][start.c] = true;
+
+    const dRow = [-1, 1, 0, 0];
+    const dCol = [0, 0, -1, 1];
+
+    const begin = performance.now();
+
+    while (front < rear) {
+
+        const current = queue[front++];
+
+        metrics.nodesVisited++;
+
+        if (samePoint(current, end)) {
+
+            metrics.found = true;
+
+            break;
+        }
+
+        if (
+            maze[current.r][current.c] !== "S" &&
+            maze[current.r][current.c] !== "E"
+        ) {
+
+            maze[current.r][current.c] = ".";
+        }
+
+        drawMaze();
+
+        updateStats({
+            algorithm: "BFS",
+            found: "Searching...",
+            nodes: metrics.nodesVisited,
+            pathLength: "-",
+            cpuTime: "-",
+            peak: metrics.peakStructure
+        });
+
+        await delay(ANIMATION_DELAY_MS);
+
+        for (let i = 0; i < 4; i++) {
+
+            const nr =
+                current.r + dRow[i];
+
+            const nc =
+                current.c + dCol[i];
+
+            if (isValid(nr, nc)) {
+
+                visited[nr][nc] = true;
+
+                parentCell[nr][nc] = current;
+
+                queue[rear++] = {
+                    r: nr,
+                    c: nc
+                };
+
+                const queueSize =
+                    rear - front;
+
+                if (
+                    queueSize >
+                    metrics.peakStructure
+                ) {
+
+                    metrics.peakStructure =
+                        queueSize;
+                }
+            }
+        }
+    }
+
+    const finish = performance.now();
+
+    metrics.cpuTimeMs =
+        finish - begin;
+
+    if (metrics.found) {
+
+        metrics.pathLength =
+            reconstructPath(start, end);
+    }
+
+    drawMaze();
+
+    updateStats({
+        algorithm: "BFS",
+        found: metrics.found ? "YES" : "NO",
+        nodes: metrics.nodesVisited,
+        pathLength:
+            metrics.found ?
+            metrics.pathLength :
+            -1,
+        cpuTime:
+            metrics.cpuTimeMs.toFixed(3) + " ms",
+        peak: metrics.peakStructure
+    });
+
+    return metrics;
+}
+
+
+/* ---------------------------------------------------
+   Buttons
+--------------------------------------------------- */
+
+function disableButtons(disabled) {
+
+    document
+        .querySelectorAll("button")
+        .forEach(button => {
+            button.disabled = disabled;
+        });
+}
+
+
+function exitProgram() {
+
+    setStatus(
+        "Program closed. Refresh the page to restart."
+    );
+
+    disableButtons(true);
+
+    document.getElementById("results").innerHTML = `
+
+        <div class="info">
+
+            <strong>Program closed.</strong>
+
+            <br><br>
+
+            Refresh the browser page to start again.
+
+        </div>
+    `;
+}
+
+
+/* ---------------------------------------------------
+   Initial State
+--------------------------------------------------- */
+
+resetMaze();
+
+</script>
+
+</body>
+</html>
